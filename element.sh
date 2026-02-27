@@ -1,7 +1,6 @@
 #! /bin/bash
 
 PSQL="psql --username=freecodecamp --dbname=periodic_table -t --no-align -c"
-echo "Please provide an element as an argument."
 
 # helper function to get attributes of element
 GET_ATTRIBUTES() {
@@ -9,29 +8,40 @@ GET_ATTRIBUTES() {
   ATTRIBUTES=$($PSQL "select e.atomic_number, e.name, e.symbol, t.type, p.atomic_mass, p.melting_point_celsius, p.boiling_point_celsius from elements as e left join properties as p using (atomic_number) left join types as t using (type_id) where e.atomic_number=$1")
   echo "$ATTRIBUTES" | while IFS='|' read AN NAME SYMBOL TYPE AM MP BP
   do
-    echo "$BP"
+    echo "The element with atomic number $AN is $NAME ($SYMBOL). It's a $TYPE, with a mass of $AM amu. $NAME has a melting point of $MP celsius and a boiling point of $BP celsius."
   done
 }
 
-if [[ -z $(echo "$1" | grep ^[0-9]+$) ]]
+# if no argument passed to script
+if [[ -z $1 ]]
 then
-  ATOM1=$($PSQL "select atomic_number from elements where symbol='$1'")
-  ATOM2=$($PSQL "select atomic_number from elements where name='$1'")
+  echo "Please provide an element as an argument."
 else
-  ATOM3=$($PSQL "select atomic_number from elements where atomic_number=$1")
+
+  # check validity of argument passed
+  if [[ -z $(echo "$1" | grep ^[0-9]+$) ]]
+  then
+    ATOM1=$($PSQL "select atomic_number from elements where symbol='$1'")
+    ATOM2=$($PSQL "select atomic_number from elements where name='$1'")
+  else
+    ATOM3=$($PSQL "select atomic_number from elements where atomic_number=$1")
+  fi
+
+  # assign atomic number to atomic variable
+  if [[ -n $ATOM1 ]]
+  then
+    GET_ATTRIBUTES $ATOM1
+  elif [[ -n $ATOM2 ]]
+  then
+    GET_ATTRIBUTES $ATOM2
+  elif [[ -n $ATOM3 ]]
+  then
+    GET_ATTRIBUTES $ATOM3
+  else
+    echo "I could not find that element in the database."
+  fi
 fi
 
-# assign atomic number to atomic variable
-if [[ -n $ATOM1 ]]
-then
-  GET_ATTRIBUTES $ATOM1
-elif [[ -n $ATOM2 ]]
-then
-  GET_ATTRIBUTES $ATOM2
-elif [[ -n $ATOM3 ]]
-then
-  GET_ATTRIBUTES $ATOM3
-else
-  echo "I could not find that element in the database."
-fi
+
+
 
