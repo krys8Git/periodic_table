@@ -19,12 +19,12 @@ then
 else
 
   # check validity of argument passed
-  if [[ -z $(echo "$1" | grep ^[0-9]+$) ]]
+  if [[ -z $(echo $1 | grep -E ^[0-9]+$) ]]
   then
     ATOM1=$($PSQL "select atomic_number from elements where symbol='$1'")
     ATOM2=$($PSQL "select atomic_number from elements where name='$1'")
   else
-    ATOM3=$($PSQL "select atomic_number from elements where atomic_number=$1")
+    ATOM3=$1
   fi
 
   # assign atomic number to atomic variable
